@@ -245,32 +245,30 @@ class MissAVPlugin(Star):
             # 获取配置的显示字段
             display_fields = self.config.get("display_fields", ["番号", "标题", "中文标题", "发行日期", "详情", "女优", "男优", "类型", "发行商", "系列", "磁链", "封面"])
             
+            # 定义字段映射和处理逻辑
+            field_map = [
+                ("番号", "video_code", lambda x: x),
+                ("标题", "title", lambda x: x),
+                ("中文标题", "chinese_title", lambda x: x),
+                ("发行日期", "publish_date", lambda x: x),
+                ("详情", "description", lambda x: x),
+                ("女优", "actresses", lambda x: ", ".join(x) if isinstance(x, list) else x),
+                ("男优", "actors", lambda x: ", ".join(x) if isinstance(x, list) else x),
+                ("类型", "genres", lambda x: ", ".join(x) if isinstance(x, list) else x),
+                ("发行商", "manufacturer", lambda x: x),
+                ("系列", "series", lambda x: x),
+                ("磁链", "magnet", lambda x: x),
+            ]
+
             info_parts = []
-            if "番号" in display_fields:
-                info_parts.append(f"番号: {video['video_code']}")
-            if "标题" in display_fields:
-                info_parts.append(f"标题: {video['title']}")
-            if "中文标题" in display_fields and video.get('chinese_title'):
-                info_parts.append(f"中文标题: {video['chinese_title']}")
-            if "发行日期" in display_fields and video['publish_date']:
-                info_parts.append(f"发行日期: {video['publish_date']}")
-            if "详情" in display_fields and video.get('description'):
-                info_parts.append(f"\n详情: {video['description']}")
-            if "女优" in display_fields and video.get('actresses'):
-                info_parts.append(f"女优: {', '.join(video['actresses'])}")
-            if "男优" in display_fields and video.get('actors'):
-                info_parts.append(f"男优: {', '.join(video['actors'])}")
-            if "类型" in display_fields and video.get('genres'):
-                info_parts.append(f"类型: {', '.join(video['genres'])}")
-            if "发行商" in display_fields and video['manufacturer']:
-                info_parts.append(f"发行商: {video['manufacturer']}")
-            if "系列" in display_fields and video['series']:
-                info_parts.append(f"系列: {video['series']}")
-            if "磁链" in display_fields and video.get('magnet'):
-                info_parts.append(f"磁链: {video['magnet']}")
+            for label, key, formatter in field_map:
+                if label in display_fields and video.get(key):
+                    val = formatter(video[key])
+                    if val:
+                        info_parts.append(f"{label}: {val}")
             
             # 过滤掉空的 info_parts 并合并
-            info = "\n".join([p.strip() for p in info_parts if p.strip()])
+            info = "\n".join(info_parts)
             info += "\n\u200E"
             
             # 封面处理
