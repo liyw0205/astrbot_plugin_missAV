@@ -4,6 +4,7 @@ import time
 import hmac
 import hashlib
 import aiohttp
+import socks
 from PIL import Image, ImageFilter
 from astrbot.api.event import filter, AstrMessageEvent
 from astrbot.api.star import Context, Star, register
@@ -18,7 +19,7 @@ CACHE_DIR = os.path.join(os.path.dirname(__file__), "cache")
 BASE_HOST = "client-rapi-missav.recombee.com"
 DATABASE_ID = "missav-default"
 PUBLIC_TOKEN = "Ikkg568nlM51RHvldlPvc2GzZPE9R4XGzaH9Qj4zK9npbbbTly1gj9K4mgRn0QlV"
-
+        
 @register("astrbot_plugin_missAV", "vmoranv&Foolllll", "MissAV视频信息查询插件", "1.1.0")
 class MissAVPlugin(Star):
     def __init__(self, context: Context, config: dict):
@@ -38,7 +39,17 @@ class MissAVPlugin(Star):
                 pass
 
     def _get_proxy(self):
-        return self.config.get("missav_proxy", "")
+        proxy_url = self.config.get("missav_proxy", "")
+        proxy_setting = None
+        if proxy_url:
+            try:
+                parsed = urlparse(proxy_url)
+                proxy_type = socks.HTTP if parsed.scheme.startswith("http") else socks.SOCKS5
+                proxy_setting = (proxy_type, parsed.hostname, parsed.port)
+                print(f"使用代理: {proxy_setting}")
+            except Exception as e:
+                print(f"代理设置错误: {e}")
+        return proxy_setting
 
     def _get_blur_level(self):
         return self.config.get("missav_blur_level", 5)
